@@ -1,0 +1,36 @@
+# infrastructure protection
+ network security
+  data security endpoint security identity access management
+  cloud security
+  application security
+  order of security solutions potential
+  
+ # end point security managemnt
+ # DWS- cloud security posture mnagement
+ # data protection
+ # virtual devices in infrastructure monitoring
+ # vnet or vpc for every service
+ # ingres and egress rules
+ # cid or block
+ # BCDR                        id est
+ # ssl vs tsl
+ # 
+ 
+ gc sdcurity postures
+ 
+ federate idenity provider with cgoogle security
+ migrate unmanaged accounts
+ control access to resources
+ use grou[s and service accounrs
+ define organization policy
+
+Amazon adopted this strategy and extended it to include 6 Rs: Retiring, Retaining, Rehosting, Replatforming, Refactoring, and Re-architecting
+
+NIST: web and mobile
+
+
+
+
+
+
+
