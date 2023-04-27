@@ -8,6 +8,8 @@ import Button from "react-bootstrap/Button";
 import ToggleButton from 'react-bootstrap/ToggleButton';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import axios from "axios";
+import ToggleSwitch from './Components/ToggleSwitch';
+
 import { data } from "./Users";
 
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -31,6 +33,7 @@ function App() {
     { name: '', value: '1' },
     { name: '', value: '2' },
   ];
+  
 
   const handleEpandRow = (event, userId, indexId) => {
     const currentExpandedRows = expandedRows;
@@ -170,14 +173,14 @@ function App() {
               {epics && epics.map((epic, Eid) => (
                 <>
                   <tr
-                    onClick={(event) => handleEpandRow(event, epic[2], epic[0])}
                     key={epic[2]}
                     style={{ cursor: "pointer" }}
                   >
-                    <td>{epic[1]}</td>
+                    <td onClick={(event) => handleEpandRow(event, epic[2], epic[0])}>{epic[1]}</td>
                     <td>{epic[3]}</td>
                     <td>
-                    <ButtonGroup >
+                     <ToggleSwitch />
+                    {/* <ButtonGroup >
                       {radios.map((radio,idx) => (
                         <ToggleButton
                           key={`key-${idx}-${epic[2]}`}
@@ -192,7 +195,7 @@ function App() {
                           {radio.name}
                         </ToggleButton>
                       ))}
-                    </ButtonGroup>
+                    </ButtonGroup> */}
                     </td>
 
                     <td></td>
