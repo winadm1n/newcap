@@ -26,7 +26,8 @@ function App() {
   const [stories, setStories] = useState([]);
   const [checked, setChecked] = useState(false);
   const [radioValue, setRadioValue] = useState('1');
-  const [caps, setCaps] = useState([])
+  const [caps, setCaps] = useState([]);
+  const [storyCaps, setStoryCaps] = useState([])
 
 
   const radios = [
@@ -65,9 +66,11 @@ function App() {
       .then((resp) => resp.json())
       .then((epicReponse) => {
         let i = 0;
-        setEpics(epicReponse.issues.reduce((acc, cur) => {
+        let epicArr=[];
+        epicArr = (epicReponse.issues.reduce((acc, cur) => {
           return acc.concat([[i++, cur.fields.summary, cur.id, cur.key]]);
         }, []));
+        setEpics(epicArr);
       })
       .catch((error) => console.log('error', error))
     console.log("epics :", epics)
@@ -75,7 +78,7 @@ function App() {
 
   };
 
-  const getCapitalizablesForAll = ()=>{
+  const getCapitalizablesForEpics = ()=>{
     console.log("Getting epic capitalizables ")
 
     epics?.map((epic) =>
@@ -86,42 +89,67 @@ function App() {
     console.log("Got epic capitalizables ")
   }
 
-  //DoNotUse, only incase of changing all the epics
+  const setCapitalizables = async (EpicStoryName,value) => {
+    console.log("setting cap",value," for epic",EpicStoryName)
+    const requestOptions = { method: 'GET' }
+    await fetch(`http://localhost:5003/capitalize?EpicStoryName=${EpicStoryName}&value=${value}`, requestOptions)
+      .catch((error) => console.log('error', error))
+  };
+
+  //DoNotUse, only incase of changing all the epics used to automatically set pre-existing cap values from null to non-cap
   // const setCapitalizablesForAll = ()=>{
-  //   console.log("Setting epic capitalizables ")
-  //   epics?.map((epic) =>
+  //   console.log("ALL Setting capitalizables ")
+  //   stories?.map((story) =>
   //   {
-  //     setCapitalizables(epic[2],epic[3],0);
+  //     story.stories.map((bleh) => {
+  //       setCapitalizables(bleh[5],0);
+  //     })
   //   })
   // }
+  
 
 
   const getCapitalizables = async (key,EpicStoryName) => {
     console.log("getting caps for", EpicStoryName)
     const requestOptions = { method: 'GET' }
-    await fetch(`http://localhost:5003/capitalized?EpicStoryName=${EpicStoryName}`, requestOptions)
-      .then((resp) => resp.json())
-      .then((epicReponse) => {
-        let capsObj = {}
-        capsObj.key = key;
-        capsObj.value = epicReponse.fields.customfield_12185.value
-        setCaps((current) => [capsObj, ...current])
-        // console.log("caps :", caps)
-      })
-      .catch((error) => console.log('error', error))
+    if(caps && caps.findIndex(o => o.key == key) === -1){
+      await fetch(`http://localhost:5003/capitalized?EpicStoryName=${EpicStoryName}`, requestOptions)
+        .then((resp) => resp.json())
+        .then((epicReponse) => {
+          let capsObj = {}
+          capsObj.key = key;
+          capsObj.value = epicReponse.fields.customfield_12185.value
+          setCaps((current) => [capsObj, ...current])
+          // console.log("caps :", caps)
+        })
+        .catch((error) => console.log('error', error))
+    }
   };
 
+  const getCapitalizablesForStories = () => {
+    console.log("Getting story capitalizables ")
+    stories?.map((story) =>
+    {
+      story.stories.map((bleh) => {
+        console.log("bleh6",bleh[5])
+        getCapitalizables(bleh[6],bleh[5]);
+      })
+    })
+    
+    console.log("Got story capitalizables ")
+  }
   
   const getStories = async (epicIndex, key) => {
     const requestOptions = { method: 'GET' }
     console.log("the epic i ewant is:", epics[epicIndex][3])
+    if(stories && stories.findIndex(o => o.key == key) === -1){
     await fetch(`http://localhost:5003/stories?epic=${epics[epicIndex][3]}`, requestOptions)
       .then((resp) => resp.json())
-      .then((epicReponse) => {
+      .then((storyReponse) => {
         let storyObj = {}
         storyObj.key = key;
-        storyObj.epics = epicReponse.issues.reduce((acc, cur) => {
-          return acc.concat([[cur.fields.summary, cur.fields.name, cur.fields.reporter, cur.fields.assignee, cur.fields.customfield_10006]]);
+        storyObj.stories = storyReponse.issues.reduce((acc, cur) => {
+          return acc.concat([[cur.fields.summary, cur.fields.name, cur.fields.reporter, cur.fields.assignee, cur.fields.customfield_10006,cur.key,cur.id]]);
         }, []);
         console.log("My obj: ", key, JSON.stringify(storyObj.key), JSON.stringify(storyObj.value))
         console.log("before stories: ", stories)
@@ -138,36 +166,44 @@ function App() {
         // console.log("my stories: ", stories);
       })
       .catch((error) => console.log('error', error))
-
+    }
 
   };
 
   useEffect(() => {
     getEpics();
-    // getCapitalizablesForAll();
+    // getCapitalizablesForEpics();
     // getCapitalizables(1,"BROA-5031");
     // setCapitalizables(1,"BROA-5031",0)
   }, [project]);
 
   useEffect(() => {
-     getCapitalizablesForAll();
+     getCapitalizablesForEpics();
   }, [epics]);
 
   useEffect(() => {
-    console.log(caps)
-  }, [caps]);
+    getCapitalizablesForStories();
+    // console.log(caps)
+    // setCapitalizablesForAll();
+  }, [stories]);
 
-  const getCapValueFor = (epic)=>{
-    if(caps && caps.length !== 0 && caps.findIndex(o => o.key == epic[2]) !== -1)
-      return caps[caps.findIndex(o => o.key == epic[2])].value
+  const getCapValueFor = (key)=>{
+    if(caps && caps.length !== 0 && caps.findIndex(o => o.key == key) !== -1)
+      return caps[caps.findIndex(o => o.key == key)].value
     return -1
   }
+
+  // const getStoryCapValueFor = (key)=>{
+  //   if(storyCaps && storyCaps.length !== 0 && storyCaps.findIndex(o => o.key == key) !== -1)
+  //     return caps[caps.findIndex(o => o.key == epic[2])].value
+  //   return -1
+  // }
 
   return (
     <Container>
       <Row>
         <Col>
-          <h1> Users({data.length})</h1>
+          <h1> P </h1>
         </Col>
         <Col>
           <form onSubmit>
@@ -214,23 +250,8 @@ function App() {
                     <td>{epic[3]}</td>
                     <td>
                       {/* if(caps && caps.length !== 0 && */}
-                     {caps && caps.length==epics.length && <ToggleSwitch capValue={getCapValueFor(epic) } epicStoryName={epic[3]}/>}
-                    {/* <ButtonGroup >
-                      {radios.map((radio,idx) => (
-                        <ToggleButton
-                          key={`key-${idx}-${epic[2]}`}
-                          id={`radio-${idx}-${Eid}`}
-                          type="radio"
-                          variant={idx % 2 ? 'outline-success' : 'outline-danger'}
-                          name="radio"
-                          value={radio.value}
-                          checked={radioValue === radio.value}
-                          onChange={(e) => setRadioValue(e.currentTarget.value)}
-                        >
-                          {radio.name}
-                        </ToggleButton>
-                      ))}
-                    </ButtonGroup> */}
+                     {caps && caps.length>= epics.length && <ToggleSwitch capValue={getCapValueFor(epic[2]) } epicStoryName={epic[3]}/>}
+                    
                     </td>
 
                     <td></td>
@@ -256,15 +277,17 @@ function App() {
                           </thead>
                           <tbody style={{ background: "#999999" }}>
 
-                            {stories && stories.length !== 0 && stories.findIndex(o => o.key == epic[2]) !== -1 && stories[stories.findIndex(o => o.key == epic[2])].epics.map((story) => (
+                            {stories && stories.length !== 0 && stories.findIndex(o => o.key == epic[2]) !== -1 && stories[stories.findIndex(o => o.key == epic[2])].stories.map((story) => (
                               <>
                                 <tr key={story[5]}>
                                   <td>{story[0]}</td>
-                                  <td>{story[2].displayName}</td>
-                                  <td>{story[3].displayName}</td>
+                                  <td>{story[2]?.displayName}</td>
+                                  <td>{story[3]?.displayName}</td>
                                   <td>{story[4]}</td>
                                   <td>
-                                    <input type="radio" />
+                                  {caps && caps.length>= (epics.length+stories.length) &&
+                                    <ToggleSwitch capValue={getCapValueFor(story[6]) } epicStoryName={story[5]}/>
+                                  }
                                   </td>
                                 </tr>
                               </>

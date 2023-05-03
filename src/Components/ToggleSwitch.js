@@ -11,11 +11,18 @@ function ToggleSwitch({capValue,epicStoryName}) {
     } else {
         setCapitalizables(epicStoryName,1)
     }
+    console.log("mysterious value",val)
     setChecked(val)
+    
+    // if(checked)
+    // setChecked(false)
+    // else
+    // setChecked(true)
 
   }
 
   const setInitialValue = ()=>{
+    // console.log(capValue," at button found for",epicStoryName)
     if(capValue==="Capitalized") 
     setChecked(true)
     else
@@ -27,12 +34,13 @@ function ToggleSwitch({capValue,epicStoryName}) {
     const requestOptions = { method: 'GET' }
     await fetch(`http://localhost:5003/capitalize?EpicStoryName=${EpicStoryName}&value=${value}`, requestOptions)
       .catch((error) => console.log('error', error))
+
   };
 
   useEffect(() => {
-    console.log("got cap ",capValue,"for epic button", epicStoryName);
-    setInitialValue()
-  }, []);
+    // console.log("got cap ",capValue,"for epic button", epicStoryName);
+    setInitialValue();
+  });
 
   return (
       <ReactSwitch
