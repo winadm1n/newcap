@@ -71,9 +71,33 @@ function App() {
       })
       .catch((error) => console.log('error', error))
     console.log("epics :", epics)
+    
+
   };
 
+  const getCapitalizablesForAll = ()=>{
+    console.log("Getting epic capitalizables ")
+
+    epics?.map((epic) =>
+    {
+      getCapitalizables(epic[2],epic[3]);
+    })
+    
+    console.log("Got epic capitalizables ")
+  }
+
+  //DoNotUse, only incase of changing all the epics
+  // const setCapitalizablesForAll = ()=>{
+  //   console.log("Setting epic capitalizables ")
+  //   epics?.map((epic) =>
+  //   {
+  //     setCapitalizables(epic[2],epic[3],0);
+  //   })
+  // }
+
+
   const getCapitalizables = async (key,EpicStoryName) => {
+    console.log("getting caps for", EpicStoryName)
     const requestOptions = { method: 'GET' }
     await fetch(`http://localhost:5003/capitalized?EpicStoryName=${EpicStoryName}`, requestOptions)
       .then((resp) => resp.json())
@@ -82,16 +106,12 @@ function App() {
         capsObj.key = key;
         capsObj.value = epicReponse.fields.customfield_12185.value
         setCaps((current) => [capsObj, ...current])
-        console.log("caps :", caps)
+        // console.log("caps :", caps)
       })
       .catch((error) => console.log('error', error))
   };
-  const setCapitalizables = async (key,EpicStoryName,value) => {
-    const requestOptions = { method: 'GET' }
-    await fetch(`http://localhost:5003/capitalize?EpicStoryName=${EpicStoryName}&value=${value}`, requestOptions)
-      .catch((error) => console.log('error', error))
-  };
 
+  
   const getStories = async (epicIndex, key) => {
     const requestOptions = { method: 'GET' }
     console.log("the epic i ewant is:", epics[epicIndex][3])
@@ -124,10 +144,24 @@ function App() {
 
   useEffect(() => {
     getEpics();
-    getCapitalizables(1,"BROA-5031");
-    setCapitalizables(1,"BROA-5031",0)
+    // getCapitalizablesForAll();
+    // getCapitalizables(1,"BROA-5031");
+    // setCapitalizables(1,"BROA-5031",0)
   }, [project]);
 
+  useEffect(() => {
+     getCapitalizablesForAll();
+  }, [epics]);
+
+  useEffect(() => {
+    console.log(caps)
+  }, [caps]);
+
+  const getCapValueFor = (epic)=>{
+    if(caps && caps.length !== 0 && caps.findIndex(o => o.key == epic[2]) !== -1)
+      return caps[caps.findIndex(o => o.key == epic[2])].value
+    return -1
+  }
 
   return (
     <Container>
@@ -179,7 +213,8 @@ function App() {
                     <td onClick={(event) => handleEpandRow(event, epic[2], epic[0])}>{epic[1]}</td>
                     <td>{epic[3]}</td>
                     <td>
-                     <ToggleSwitch />
+                      {/* if(caps && caps.length !== 0 && */}
+                     {caps && caps.length==epics.length && <ToggleSwitch capValue={getCapValueFor(epic) } epicStoryName={epic[3]}/>}
                     {/* <ButtonGroup >
                       {radios.map((radio,idx) => (
                         <ToggleButton
