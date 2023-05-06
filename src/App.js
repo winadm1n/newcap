@@ -48,21 +48,20 @@ function App() {
     const newExpandedRows = isRowExpanded
       ? currentExpandedRows.filter((id) => id !== userId)
       : currentExpandedRows.concat(userId);
-
     setExpandedRows(newExpandedRows);
     getStories(indexId, userId);
   };
 
   const handleChange = (event) => {
-    console.log(event.target.value)
+    // console.log(event.target.value)
     setProject(event.target.value);
-    console.log("prject: ", project);
-    getEpics();
+    // console.log("prject: ", project);
+    // getEpics();
   };
 
   const getEpics = async () => {
     const requestOptions = { method: 'GET' }
-    await fetch(`http://localhost:5003/epics?project=${project}`, requestOptions)
+    await fetch(`http://localhost:5003/epics?project=${project}`)
       .then((resp) => resp.json())
       .then((epicReponse) => {
         let i = 0;
@@ -73,30 +72,17 @@ function App() {
         setEpics(epicArr);
       })
       .catch((error) => console.log('error', error))
-    console.log("epics :", epics)
-    
-
+    // console.log("epics :", epics)
   };
 
-  const getCapitalizablesForEpics = ()=>{
-    console.log("Getting epic capitalizables ")
 
-    epics?.map((epic) =>
-    {
-      getCapitalizables(epic[2],epic[3]);
-    })
-    
-    console.log("Got epic capitalizables ")
-  }
-
-  const setCapitalizables = async (EpicStoryName,value) => {
-    console.log("setting cap",value," for epic",EpicStoryName)
-    const requestOptions = { method: 'GET' }
-    await fetch(`http://localhost:5003/capitalize?EpicStoryName=${EpicStoryName}&value=${value}`, requestOptions)
-      .catch((error) => console.log('error', error))
-  };
-
-  //DoNotUse, only incase of changing all the epics used to automatically set pre-existing cap values from null to non-cap
+//##DoNotUse, only incase of changing all the epics used to automatically set pre-existing cap values from null to non-cap
+  // const setCapitalizables = async (EpicStoryName,value) => {
+  //   console.log("setting cap",value," for epic",EpicStoryName)
+  //   const requestOptions = { method: 'GET' }
+  //   await fetch(`http://localhost:5003/capitalize?EpicStoryName=${EpicStoryName}&value=${value}`, requestOptions)
+  //     .catch((error) => console.log('error', error))
+  // };
   // const setCapitalizablesForAll = ()=>{
   //   console.log("ALL Setting capitalizables ")
   //   stories?.map((story) =>
@@ -110,9 +96,10 @@ function App() {
 
 
   const getCapitalizables = async (key,EpicStoryName) => {
-    console.log("getting caps for", EpicStoryName)
+    // console.log("getting caps for",EpicStoryName,caps?.findIndex(o => o.key == key))
     const requestOptions = { method: 'GET' }
     if(caps && caps.findIndex(o => o.key == key) === -1){
+      // console.log("caps in if:", caps)
       await fetch(`http://localhost:5003/capitalized?EpicStoryName=${EpicStoryName}`, requestOptions)
         .then((resp) => resp.json())
         .then((epicReponse) => {
@@ -120,28 +107,49 @@ function App() {
           capsObj.key = key;
           capsObj.value = epicReponse.fields.customfield_12185.value
           setCaps((current) => [capsObj, ...current])
-          // console.log("caps :", caps)
+          
+        })
+        .catch((error) => console.log('error', error))
+    }
+    else if(caps&& caps.findIndex(o => o.key == key) !== -1){
+      // console.log("caps in else if:")
+      await fetch(`http://localhost:5003/capitalized?EpicStoryName=${EpicStoryName}`, requestOptions)
+        .then((resp) => resp.json())
+        .then((epicReponse) => {
+          let capsArr = caps;
+          capsArr[capsArr.findIndex(o => o.key == key)].value=epicReponse.fields.customfield_12185.value;
+          // console.log("at this part",capsArr[capsArr.findIndex(o => o.key == key)].value)
+          setCaps(capsArr)
+          
         })
         .catch((error) => console.log('error', error))
     }
   };
 
+  const getCapitalizablesForEpics = ()=>{
+    // console.log("Getting epic capitalizables ")
+    epics?.map((epic) =>
+    {
+      getCapitalizables(epic[2],epic[3]);
+    })
+    // console.log("Got epic capitalizables ")
+  }
+
   const getCapitalizablesForStories = () => {
-    console.log("Getting story capitalizables ")
+    // console.log("Getting story capitalizables ")
     stories?.map((story) =>
     {
       story.stories.map((bleh) => {
-        console.log("bleh6",bleh[5])
+        // console.log("bleh6",bleh[5])
         getCapitalizables(bleh[6],bleh[5]);
       })
     })
-    
-    console.log("Got story capitalizables ")
+    // console.log("Got story capitalizables ")
   }
   
   const getStories = async (epicIndex, key) => {
     const requestOptions = { method: 'GET' }
-    console.log("the epic i ewant is:", epics[epicIndex][3])
+    // console.log("the epic i ewant is:", epics[epicIndex][3])
     if(stories && stories.findIndex(o => o.key == key) === -1){
     await fetch(`http://localhost:5003/stories?epic=${epics[epicIndex][3]}`, requestOptions)
       .then((resp) => resp.json())
@@ -151,47 +159,49 @@ function App() {
         storyObj.stories = storyReponse.issues.reduce((acc, cur) => {
           return acc.concat([[cur.fields.summary, cur.fields.name, cur.fields.reporter, cur.fields.assignee, cur.fields.customfield_10006,cur.key,cur.id]]);
         }, []);
-        console.log("My obj: ", key, JSON.stringify(storyObj.key), JSON.stringify(storyObj.value))
-        console.log("before stories: ", stories)
+        // console.log("My obj: ", key, JSON.stringify(storyObj.key), JSON.stringify(storyObj.value))
+        // console.log("before stories: ", stories)
         setStories((current) => [storyObj, ...current]);
-        // setStories(stateObject)
-        console.log("State Stories: ", stories)
-        // storyObj[key]=stories;
-        //Object.assign(storyObj, {  key: stories });
-
-        // storyObj(stories.key: )
-        //   setStories(epicReponse.issues.reduce((acc, cur) => {
-        //     return acc.concat([[cur.fields.summary, cur.fields.name, cur.fields.reporter, cur.fields.assignee, cur.fields.customfield_10006, cur.id]]);
-        // }, []));
+        // console.log("State Stories: ", stories)
         // console.log("my stories: ", stories);
       })
       .catch((error) => console.log('error', error))
     }
 
   };
-
-  useEffect(() => {
-    getEpics();
-    // getCapitalizablesForEpics();
-    // getCapitalizables(1,"BROA-5031");
-    // setCapitalizables(1,"BROA-5031",0)
-  }, [project]);
-
-  useEffect(() => {
-     getCapitalizablesForEpics();
-  }, [epics]);
-
-  useEffect(() => {
-    getCapitalizablesForStories();
-    // console.log(caps)
-    // setCapitalizablesForAll();
-  }, [stories]);
-
+  const getCapitalizablesForAll=()=>{getCapitalizablesForStories(); getCapitalizablesForEpics();}
+  //setCaps(null); 
   const getCapValueFor = (key)=>{
+    // console.log("inside key is",key)
     if(caps && caps.length !== 0 && caps.findIndex(o => o.key == key) !== -1)
       return caps[caps.findIndex(o => o.key == key)].value
     return -1
   }
+  
+  useEffect(() => {
+    setEpics(null);
+    // setCaps(null);
+    getEpics(); 
+    getCapitalizablesForAll();
+    setExpandedRows([]);
+    // console.log("cap from parent",getCapValueFor("BROA-5031"))
+  }, [project]);
+
+  useEffect(() => {
+    if(epics)
+     getCapitalizablesForEpics();
+  }, [epics]);
+
+  useEffect(() => {
+    if(stories)
+    getCapitalizablesForStories();
+    console.log(caps)
+    // setCapitalizablesForAll();
+  }, [stories]);
+
+  // useEffect(() => {
+  //   console.log("caps: ",caps)
+  // },[caps])
 
   // const getStoryCapValueFor = (key)=>{
   //   if(storyCaps && storyCaps.length !== 0 && storyCaps.findIndex(o => o.key == key) !== -1)
@@ -203,7 +213,7 @@ function App() {
     <Container>
       <Row>
         <Col>
-          <h1> P </h1>
+          <h1> EPICS </h1>
         </Col>
         <Col>
           <form onSubmit>
@@ -249,8 +259,7 @@ function App() {
                     <td onClick={(event) => handleEpandRow(event, epic[2], epic[0])}>{epic[1]}</td>
                     <td>{epic[3]}</td>
                     <td>
-                      {/* if(caps && caps.length !== 0 && */}
-                     {caps && caps.length>= epics.length && <ToggleSwitch capValue={getCapValueFor(epic[2]) } epicStoryName={epic[3]}/>}
+                     {caps && caps.findIndex(o => o.key == epic[2]) !== -1 && <ToggleSwitch capValue={getCapValueFor(epic[2]) } epicStoryName={epic[3]} />}
                     
                     </td>
 
@@ -285,8 +294,7 @@ function App() {
                                   <td>{story[3]?.displayName}</td>
                                   <td>{story[4]}</td>
                                   <td>
-                                  {caps && caps.length>= (epics.length+stories.length) &&
-                                    <ToggleSwitch capValue={getCapValueFor(story[6]) } epicStoryName={story[5]}/>
+                                  { caps && caps.findIndex(o => o.key == story[6]) !== -1 && <ToggleSwitch capValue={getCapValueFor(story[6]) } epicStoryName={story[5]}/>
                                   }
                                   </td>
                                 </tr>
